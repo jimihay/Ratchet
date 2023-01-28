@@ -1,6 +1,12 @@
 <?php
 namespace Ratchet\Session;
+
+use Psr\Http\Message\RequestInterface;
 use Ratchet\AbstractMessageComponentTestCase;
+use Ratchet\ConnectionInterface;
+use Ratchet\Http\HttpServerInterface;
+use Ratchet\NullComponent;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\NullSessionHandler;
 
@@ -9,32 +15,32 @@ use Symfony\Component\HttpFoundation\Session\Storage\Handler\NullSessionHandler;
  * @covers Ratchet\Session\Storage\VirtualSessionStorage
  * @covers Ratchet\Session\Storage\Proxy\VirtualProxy
  */
-class SessionProviderTest extends AbstractMessageComponentTestCase {
-    public function setUp() {
-        return $this->markTestIncomplete('Test needs to be updated for ini_set issue in PHP 7.2');
+class SessionComponentTest extends AbstractMessageComponentTestCase {
+    public function setUp(): void {
+        $this->markTestIncomplete('Test needs to be updated for ini_set issue in PHP 7.2');
 
-        if (!class_exists('Symfony\Component\HttpFoundation\Session\Session')) {
-            return $this->markTestSkipped('Dependency of Symfony HttpFoundation failed');
+        if (!class_exists(Session::class)) {
+            $this->markTestSkipped('Dependency of Symfony HttpFoundation failed');
         }
 
         parent::setUp();
         $this->_serv = new SessionProvider($this->_app, new NullSessionHandler);
     }
 
-    public function tearDown() {
+    public function tearDown(): void {
         ini_set('session.serialize_handler', 'php');
     }
 
     public function getConnectionClassString() {
-        return '\Ratchet\ConnectionInterface';
+        return ConnectionInterface::class;
     }
 
     public function getDecoratorClassString() {
-        return '\Ratchet\NullComponent';
+        return NullComponent::class;
     }
 
     public function getComponentClassString() {
-        return '\Ratchet\Http\HttpServerInterface';
+        return HttpServerInterface::class;
     }
 
     public function classCaseProvider() {
@@ -48,11 +54,11 @@ class SessionProviderTest extends AbstractMessageComponentTestCase {
      * @dataProvider classCaseProvider
      */
     public function testToClassCase($in, $out) {
-        $ref = new \ReflectionClass('\\Ratchet\\Session\\SessionProvider');
+        $ref = new \ReflectionClass(SessionProvider::class);
         $method = $ref->getMethod('toClassCase');
         $method->setAccessible(true);
 
-        $component = new SessionProvider($this->getMock($this->getComponentClassString()), $this->getMock('\SessionHandlerInterface'));
+        $component = new SessionProvider($this->createMock($this->getComponentClassString()), $this->createMock(\SessionHandlerInterface::class));
         $this->assertEquals($out, $method->invokeArgs($component, array($in)));
     }
 
@@ -61,7 +67,7 @@ class SessionProviderTest extends AbstractMessageComponentTestCase {
      */
     public function testConnectionValueFromPdo() {
         if (!extension_loaded('PDO') || !extension_loaded('pdo_sqlite')) {
-            return $this->markTestSkipped('Session test requires PDO and pdo_sqlite');
+            $this->markTestSkipped('Session test requires PDO and pdo_sqlite');
         }
 
         $sessionId = md5('testSession');
@@ -81,10 +87,10 @@ class SessionProviderTest extends AbstractMessageComponentTestCase {
         $pdoHandler = new PdoSessionHandler($pdo, $dbOptions);
         $pdoHandler->write($sessionId, '_sf2_attributes|a:2:{s:5:"hello";s:5:"world";s:4:"last";i:1332872102;}_sf2_flashes|a:0:{}');
 
-        $component  = new SessionProvider($this->getMock($this->getComponentClassString()), $pdoHandler, array('auto_start' => 1));
-        $connection = $this->getMock('Ratchet\\ConnectionInterface');
+        $component  = new SessionProvider($this->createMock($this->getComponentClassString()), $pdoHandler, array('auto_start' => 1));
+        $connection = $this->createMock(ConnectionInterface::class);
 
-        $headers = $this->getMock('Psr\Http\Message\RequestInterface');
+        $headers = $this->createMock(RequestInterface::class);
         $headers->expects($this->once())->method('getHeader')->will($this->returnValue([ini_get('session.name') . "={$sessionId};"]));
 
         $component->onOpen($connection, $headers);
@@ -93,9 +99,9 @@ class SessionProviderTest extends AbstractMessageComponentTestCase {
     }
 
     protected function newConn() {
-        $conn = $this->getMock('Ratchet\ConnectionInterface');
+        $conn = $this->createMock(ConnectionInterface::class);
 
-        $headers = $this->getMock('Psr\Http\Message\Request', array('getCookie'), array('POST', '/', array()));
+        $headers = $this->createMock(Psr\Http\Message\Request::class, array('getCookie'), array('POST', '/', array()));
         $headers->expects($this->once())->method('getCookie', array(ini_get('session.name')))->will($this->returnValue(null));
 
         return $conn;
@@ -113,12 +119,12 @@ class SessionProviderTest extends AbstractMessageComponentTestCase {
         }
 
         ini_set('session.serialize_handler', 'wddx');
-        $this->setExpectedException('\RuntimeException');
-        new SessionProvider($this->getMock($this->getComponentClassString()), $this->getMock('\SessionHandlerInterface'));
+        $this->expectException(\RuntimeException::class);
+        new SessionProvider($this->createMock($this->getComponentClassString()), $this->createMock(\SessionHandlerInterface::class));
     }
 
     protected function doOpen($conn) {
-        $request = $this->getMock('Psr\Http\Message\RequestInterface');
+        $request = $this->createMock(RequestInterface::class);
         $request->expects($this->any())->method('getHeader')->will($this->returnValue([]));
 
         $this->_serv->onOpen($conn, $request);

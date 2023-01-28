@@ -1,5 +1,6 @@
 <?php
 namespace Ratchet\Mock;
+use Ratchet\ComponentInterface;
 use Ratchet\MessageComponentInterface;
 use Ratchet\WebSocket\WsServerInterface;
 use Ratchet\ConnectionInterface;
