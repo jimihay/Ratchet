@@ -6,6 +6,10 @@ use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBag;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBag;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler;
 
+/**
+ * @covers Ratchet\Session\Storage\VirtualSessionStorage
+ * @covers Ratchet\Session\Storage\Proxy\VirtualProxy
+ */
 class VirtualSessionStoragePDOTest extends TestCase {
     /**
      * @var VirtualSessionStorage
