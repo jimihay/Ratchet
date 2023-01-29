@@ -46,6 +46,9 @@ abstract class AbstractMessageComponentTestCase extends TestCase {
         $this->_serv->onClose($this->_conn);
     }
 
+    /**
+     * @runInSeparateProcess
+     */
     public function testOnError() {
         $e = new \Exception('Whoops!');
         $this->_app->expects($this->once())->method('onError')->with($this->isExpectedConnection(), $e);
