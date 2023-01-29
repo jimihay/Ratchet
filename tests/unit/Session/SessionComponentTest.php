@@ -17,8 +17,6 @@ use Symfony\Component\HttpFoundation\Session\Storage\Handler\NullSessionHandler;
  */
 class SessionComponentTest extends AbstractMessageComponentTestCase {
     public function setUp(): void {
-        $this->markTestIncomplete('Test needs to be updated for ini_set issue in PHP 7.2');
-
         if (!class_exists(Session::class)) {
             $this->markTestSkipped('Dependency of Symfony HttpFoundation failed');
         }
@@ -52,6 +50,7 @@ class SessionComponentTest extends AbstractMessageComponentTestCase {
 
     /**
      * @dataProvider classCaseProvider
+     * @runInSeparateProcess
      */
     public function testToClassCase($in, $out) {
         $ref = new \ReflectionClass(SessionProvider::class);
@@ -64,6 +63,7 @@ class SessionComponentTest extends AbstractMessageComponentTestCase {
 
     /**
      * I think I have severely butchered this test...it's not so much of a unit test as it is a full-fledged component test
+     * @runInSeparateProcess
      */
     public function testConnectionValueFromPdo() {
         if (!extension_loaded('PDO') || !extension_loaded('pdo_sqlite')) {
@@ -107,12 +107,18 @@ class SessionComponentTest extends AbstractMessageComponentTestCase {
         return $conn;
     }
 
+    /**
+     * @runInSeparateProcess
+     */
     public function testOnMessageDecorator() {
         $message = "Database calls are usually blocking  :(";
         $this->_app->expects($this->once())->method('onMessage')->with($this->isExpectedConnection(), $message);
         $this->_serv->onMessage($this->_conn, $message);
     }
 
+    /**
+     * @runInSeparateProcess
+     */
     public function testRejectInvalidSeralizers() {
         if (!function_exists('wddx_serialize_value')) {
             $this->markTestSkipped();

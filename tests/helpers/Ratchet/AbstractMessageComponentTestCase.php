@@ -30,11 +30,17 @@ abstract class AbstractMessageComponentTestCase extends TestCase {
         return new IsInstanceOf($this->getConnectionClassString());
     }
 
+    /**
+     * @runInSeparateProcess
+     */
     public function testOpen() {
         $this->_app->expects($this->once())->method('onOpen')->with($this->isExpectedConnection());
         $this->doOpen($this->createMock(ConnectionInterface::class));
     }
 
+    /**
+     * @runInSeparateProcess
+     */
     public function testOnClose() {
         $this->_app->expects($this->once())->method('onClose')->with($this->isExpectedConnection());
         $this->_serv->onClose($this->_conn);
